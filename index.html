@@ -19,58 +19,208 @@
         .logo {
             width: 4em;
         }
+        .strikeout {
+            text-decoration: line-through;
+        }
     </style>
 </head>
 
 <body>
 
-    <div id="app" class="container-fluid d-flex flex-column">
-        
+    <div id="app" class="container-fluid d-flex flex-column align-items-center align-items-md-start">
+
         <header class="p-3 d-flex align-items-center">
             <div><img src="horse.png" class="logo"></div>
             <span class="display-5">Horse Racer</span>
         </header>
 
-        <div class="container-fluid d-flex justify-content-between align-items-center border border-dark rounded py-2">
-            <span>Cash: ${{ cash }}</span>
-            <span>Race: {{ raceCount }}</span>            
+        <div class="container-fluid d-flex justify-content-between align-items-center border border-dark rounded py-1 my-2">
+            <span class="btn">Cash: ${{ cash }}</span>
+            <button type="button" class="btn btn-outline-dark" @click="initRace" v-if="race.status == 2">Next
+                race</button>
+            <button type="button" class="btn btn-outline-dark" @click="startRace" v-if="race.status == 0">Start
+                race</button>
+            <span>Race: {{ raceCount }}</span>
         </div>
 
-        <div class="flex-grow-1 container-fluid py-2">
-            <div v-for="horseNumber in race.racingHorses" class="d-flex">
+        <div class="flex-grow-1 container-fluid p-3 border border-dark rounded my-2">
+            <div v-for="horseNumber in race.racingHorses" class="d-flex align-items-center">
                 <div style="width: 3em;">
-                    {{ getHorseOdds(horseNumber) }}:1
+                    <b class="small">{{ getHorseOdds(horseNumber) }}:1</b>
                 </div>
-                <div style="width: 11em">
-                    <span>{{ horses[horseNumber].name }}</span>
-                    <span v-if="horses[horseNumber].placing" :class="{ 'fw-bold': horses[horseNumber].placing < 4 }"> ({{ horses[horseNumber].placing }})</span>
+                <div class="d-flex align-items-center" style="width: 10em">
+                    <span>{{ horses[horseNumber].name }} </span>
+                    <span v-if="horses[horseNumber].placing" class="badge text-light ms-2" :class="{ 'bg-success': horses[horseNumber].placing < 4, 'bg-dark': horses[horseNumber].placing >= 4 }">
+                        #{{ horses[horseNumber].placing }}</span>
                 </div>
-                <input class="flex-grow-1" type="range" min="0" :max="settings.trackLength" v-model="horses[horseNumber].position" disabled>
+                <input class="flex-grow-1" type="range" min="0" :max="settings.trackLength"
+                    v-model="horses[horseNumber].position" disabled>
             </div>
         </div>
 
-        <button type="button" class="btn btn-outline-dark" @click="initRace" v-if="race.status == 2">Next race</button>
-        <button type="button" class="btn btn-outline-dark" @click="startRace" v-if="race.status == 0">Start race</button>
+        <div class="d-flex flex-wrap w-100">
+            <div class="p-3 border border-dark rounded my-2 w-100" v-if="race.status == 0">
+                <h5>New Bet:</h5>
+                <select class="form-select my-2" v-model="newBet.type">
+                    <option :value="betType" v-for="betType in betTypes">{{ betType }}</option>
+                </select>
+                <select class="form-select my-2" v-model="newBet.horseNumber">
+                    <option :value="horseNumber" v-for="horseNumber in race.racingHorses">{{ horses[horseNumber].name }}
+                    </option>
+                </select>
+                <div class="d-flex align-items-center my-2">
+                    <span class="me-1">$</span>
+                    <input type="number" class="form-control me-2" min="1" :max="cash" style="width: 6em;" v-model="newBet.bet" @change="validateNewBetAmount">
+                </div>
+                <div class="my-2 d-flex justify-content-between align-content-center">
+                    <div>
+                        Payout: ${{ 
+                            calculatePayoutForBet( newBet )
+                        }}
+                    </div>
+                    <button type="button" class="btn btn-outline-dark" @click="placeBet"
+                        :disabled="newBet.bet > cash">Add bet</button>
+                </div>
+            </div>
+
+            <div class="w-100 my-2 border border-dark rounded p-3">
+                <h5>Bets:</h5>
+                <div class="w-100 text-center text-secondary" v-if="!(race.bets != 0)">No bets have been made.</div>
+                <div class="w-100 d-flex justify-content-between align-items-center p-2 mb-2 border border-dark rounded text-center text-light" :class="{ 'bg-dark': !bet.won && race.status < 2, 'bg-success': bet.won, 'bg-secondary': !bet.won && race.status == 2 }" v-for="bet in race.bets">
+                    <span>{{ bet.type }}</span>
+                    <span><b>{{ horses[bet.horseNumber].name }}</b></span>
+                    <span>${{ bet.bet }}</span>
+                    <span class="badge fs-5" :class="{ 'bg-danger': !bet.won && race.status < 2, 'bg-white': bet.won, 'text-dark': bet.won, strikeout: !bet.won && race.status == 2 }">${{ calculatePayoutForBet(bet) }}</span>
+                </div>
+            </div>
+        </div>
 
     </div>
 
     <script>
-
         const vueApp = {
 
             data() {
                 return {
                     cash: 150,
                     raceCount: 0,
-                    horses: [{"name":"Tiny tot"},{"name":"Acne face"},{"name":"Ahtylopy"},{"name":"Big red"},{"name":"Big sister"},{"name":"Big bang"},{"name":"Bad smell"},{"name":"Cindy"},{"name":"Constallation"},{"name":"Jockys hope"},{"name":"Pushme then"},{"name":"Endless track"},{"name":"Filly folly"},{"name":"Flying nun"},{"name":"Piccolo player"},{"name":"Felicity"},{"name":"Heidi's horror"},{"name":"Down under"},{"name":"Dull thunder"},{"name":"David's delight"},{"name":"Hozaya"},{"name":"Hot feet"},{"name":"Isabel"},{"name":"Izaya"},{"name":"Joshua"},{"name":"Machorse"},{"name":"Jack"},{"name":"Jill"},{"name":"Kakapo"},{"name":"Knight rider"},{"name":"King wonder"},{"name":"Lady Di"},{"name":"Lightning bolt"},{"name":"Macwonder"},{"name":"Lost scalp"},{"name":"Nehemiah"},{"name":"Quick hoof"},{"name":"Oats"},{"name":"Polly"},{"name":"Phooy"},{"name":"Paperback"},{"name":"Quantum leap"},{"name":"Quark"},{"name":"Super slow"},{"name":"Slangdally"},{"name":"Tinkerbell"},{"name":"Unsaturated"},{"name":"Umber hulk"},{"name":"Velvet"},{"name":"Yellow belly"},{"name":"Nobodies loss"}],
+                    horses: [{
+                        "name": "Tiny tot"
+                    }, {
+                        "name": "Acne face"
+                    }, {
+                        "name": "Ahtylopy"
+                    }, {
+                        "name": "Big red"
+                    }, {
+                        "name": "Big sister"
+                    }, {
+                        "name": "Big bang"
+                    }, {
+                        "name": "Bad smell"
+                    }, {
+                        "name": "Cindy"
+                    }, {
+                        "name": "Constallation"
+                    }, {
+                        "name": "Jockys hope"
+                    }, {
+                        "name": "Pushme then"
+                    }, {
+                        "name": "Endless track"
+                    }, {
+                        "name": "Filly folly"
+                    }, {
+                        "name": "Flying nun"
+                    }, {
+                        "name": "Piccolo player"
+                    }, {
+                        "name": "Felicity"
+                    }, {
+                        "name": "Heidi's horror"
+                    }, {
+                        "name": "Down under"
+                    }, {
+                        "name": "Dull thunder"
+                    }, {
+                        "name": "David's delight"
+                    }, {
+                        "name": "Hozaya"
+                    }, {
+                        "name": "Hot feet"
+                    }, {
+                        "name": "Isabel"
+                    }, {
+                        "name": "Izaya"
+                    }, {
+                        "name": "Joshua"
+                    }, {
+                        "name": "Machorse"
+                    }, {
+                        "name": "Jack"
+                    }, {
+                        "name": "Jill"
+                    }, {
+                        "name": "Kakapo"
+                    }, {
+                        "name": "Knight rider"
+                    }, {
+                        "name": "King wonder"
+                    }, {
+                        "name": "Lady Di"
+                    }, {
+                        "name": "Lightning bolt"
+                    }, {
+                        "name": "Macwonder"
+                    }, {
+                        "name": "Lost scalp"
+                    }, {
+                        "name": "Nehemiah"
+                    }, {
+                        "name": "Quick hoof"
+                    }, {
+                        "name": "Oats"
+                    }, {
+                        "name": "Polly"
+                    }, {
+                        "name": "Phooy"
+                    }, {
+                        "name": "Paperback"
+                    }, {
+                        "name": "Quantum leap"
+                    }, {
+                        "name": "Quark"
+                    }, {
+                        "name": "Super slow"
+                    }, {
+                        "name": "Slangdally"
+                    }, {
+                        "name": "Tinkerbell"
+                    }, {
+                        "name": "Unsaturated"
+                    }, {
+                        "name": "Umber hulk"
+                    }, {
+                        "name": "Velvet"
+                    }, {
+                        "name": "Yellow belly"
+                    }, {
+                        "name": "Nobodies loss"
+                    }],
                     horsesPool: [],
                     race: {},
+                    newBet: {
+                        type: "To Win",
+                        horseNumber: 0,
+                        bet: 10
+                    },
+                    betTypes: ["To Win", "Place"],
 
                     settings: {
                         maxHorsesPool: 20,
                         horsesPerRace: 8,
                         trackLength: 1600,
-                        raceIntervalMs: 50,
+                        raceIntervalMs: 40,
                         moveConstant: 1,
                         speedInfluence: 0.035,
                         luckInfluence: 0.025,
@@ -80,7 +230,11 @@
             },
 
             methods: {
-                    
+
+                deepCopy(arr) {
+                    return JSON.parse(JSON.stringify(arr))
+                },
+
                 getRandomArrayPositions(arr, size) {
                     const positionMax = arr.length - 1
 
@@ -120,6 +274,8 @@
                     this.race.finishedCount = 0
                     this.race.racingHorses = []
 
+                    this.race.bets = []
+
                     for (horse of this.horses) {
                         horse.position = 0
                         horse.placing = 0
@@ -137,12 +293,15 @@
                         this.race.oddsTotal += this.horses[position].speed * 2 + this.horses[position].luck
                     }
                     
+                    
+                    this.newBet.horseNumber = this.race.racingHorses[0]
+
                 },
 
                 startRace() {
                     // while (this.race.finishedCount < this.settings.horsesPerRace) {
-                        // console.log(this.race.finishedCount + "|" + this.settings.maxHorsesPool)
-                        
+                    // console.log(this.race.finishedCount + "|" + this.settings.maxHorsesPool)
+
                     // }
                     this.race.status = 1
 
@@ -151,15 +310,16 @@
 
                         if (this.race.finishedCount == this.settings.horsesPerRace) {
                             this.race.status = 2
+                            this.payoutBets()
                             clearInterval(raceInterval)
                         }
                     }, this.settings.raceIntervalMs)
                 },
 
                 moveHorses() {
-                        for (horseNumber of this.race.racingHorses) {
-                            this.moveHorse(horseNumber)
-                        }
+                    for (horseNumber of this.race.racingHorses) {
+                        this.moveHorse(horseNumber)
+                    }
                 },
 
                 moveHorse(horseNumber) {
@@ -167,7 +327,8 @@
                         const randomFactor = this.settings.randomInfluence * Math.round(Math.random())
                         const horseSpeedFactor = this.settings.speedInfluence * this.horses[horseNumber].speed
                         const horseLuckFactor = this.settings.luckInfluence * this.horses[horseNumber].luck
-                        this.horses[horseNumber].position += this.settings.moveConstant + randomFactor + horseSpeedFactor + horseLuckFactor
+                        this.horses[horseNumber].position += this.settings.moveConstant + randomFactor +
+                            horseSpeedFactor + horseLuckFactor
                         if (this.horses[horseNumber].position >= this.settings.trackLength) {
                             this.horses[horseNumber].finished = true
                             this.race.finishedCount += 1
@@ -178,7 +339,47 @@
                 },
 
                 getHorseOdds(horseNumber) {
-                    return Math.floor((this.race.oddsTotal - (this.horses[horseNumber].speed * 2 + this.horses[horseNumber].luck)) / (this.horses[horseNumber].speed * 2 + this.horses[horseNumber].luck) ) - 1
+                    return Math.floor((this.race.oddsTotal - (this.horses[horseNumber].speed * 2 + this.horses[
+                        horseNumber].luck)) / (this.horses[horseNumber].speed * 2 + this.horses[horseNumber]
+                        .luck)) - 1
+                },
+
+                placeBet() {
+                    this.cash -= this.newBet.bet
+                    this.race.bets.push(this.deepCopy(this.newBet))
+                },
+
+                payoutBets() {
+                    for (bet of this.race.bets) {
+
+                        bet.won = true
+
+                        if (bet.type == "To Win" && this.horses[bet.horseNumber].placing == 1) {
+                            this.cash += this.calculatePayoutForBet(bet)
+                        } else if (bet.type == "Place" && this.horses[bet.horseNumber].placing <= 3) {
+                            this.cash += this.calculatePayoutForBet(bet)
+                        } else {
+                            bet.won = false
+                        }
+
+                    }
+                },
+
+                calculatePayoutForBet(bet) {
+                    let payout = 0
+
+                    if (bet.type == "To Win") {
+                        payout = bet.bet + this.getHorseOdds(bet.horseNumber) * bet.bet
+                    } else if (bet.type == "Place") {
+                        payout = bet.bet + Math.round((this.getHorseOdds(bet.horseNumber) * bet.bet) / 3)
+                    }
+
+                    return payout
+                },
+
+                validateNewBetAmount() {
+                    if (this.newBet.bet < 1) {this.newBet.bet = 1}
+                    else if (this.newBet.bet > this.cash) {this.newBet.bet = this.cash}
                 }
 
             },
@@ -187,7 +388,7 @@
                 this.initHorsesPool()
                 this.initRace()
             }
-            
+
         }
 
         app = Vue.createApp(vueApp)
