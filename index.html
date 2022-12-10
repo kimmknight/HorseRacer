@@ -369,9 +369,9 @@
                     let payout = 0
 
                     if (bet.type == "To Win") {
-                        payout = bet.bet + this.getHorseOdds(bet.horseNumber) * bet.bet
+                        payout = this.getHorseOdds(bet.horseNumber) * bet.bet
                     } else if (bet.type == "Place") {
-                        payout = bet.bet + Math.round((this.getHorseOdds(bet.horseNumber) * bet.bet) / 3)
+                        payout = Math.round((this.getHorseOdds(bet.horseNumber) * bet.bet) / 3)
                     }
 
                     return payout
