@@ -47,6 +47,11 @@
             background: url('horse.png');
         }
 
+        .trifecta-names {
+            font-size: 0.7em;
+            line-height: 1em;
+        }
+
     </style>
 </head>
 
@@ -97,25 +102,34 @@
         <div class="d-flex flex-wrap w-100">
             <div class="p-3 border border-dark rounded my-2 w-100" v-if="race.status == 0">
                 <h5>New Bet:</h5>
-                <select class="form-select my-2" v-model="newBet.type">
+                <select class="form-select my-2 border border-dark border-3" v-model="newBet.type">
                     <option :value="betType" v-for="betType in betTypes">{{ betType }}</option>
                 </select>
-                <select class="form-select my-2" v-model="newBet.horseNumber">
+
+                <select class="form-select my-2 border border-dark" v-model="newBet.horses[0]">
                     <option :value="horseNumber" v-for="horseNumber in race.racingHorses">{{ horses[horseNumber].name }}
                     </option>
                 </select>
-                <div class="d-flex align-items-center my-2">
-                    <span class="me-1">$</span>
-                    <input type="number" class="form-control me-2" min="1" :max="cash" style="width: 6em;" v-model="newBet.bet" @change="validateNewBetAmount">
-                </div>
-                <div class="my-2 d-flex justify-content-between align-content-center">
+                <select class="form-select my-2 border border-dark" v-model="newBet.horses[1]" v-if="newBet.type.includes('Trifecta')">
+                    <option :value="horseNumber" v-for="horseNumber in race.racingHorses">{{ horses[horseNumber].name }}
+                    </option>
+                </select>
+                <select class="form-select my-2 border border-dark" v-model="newBet.horses[2]" v-if="newBet.type.includes('Trifecta')">
+                    <option :value="horseNumber" v-for="horseNumber in race.racingHorses">{{ horses[horseNumber].name }}
+                    </option>
+                </select>
+                <div class="my-2 d-flex justify-content-between align-content-center align-items-center">
+                    <div class="d-flex align-items-center my-2">
+                        <span class="me-1">$</span>
+                        <input type="number" class="form-control me-2 border border-dark" min="1" :max="cash" style="width: 6em;" v-model="newBet.bet" @change="validateNewBetAmount">
+                    </div>
                     <div>
                         Payout: ${{ 
                             calculatePayoutForBet( newBet )
                         }}
                     </div>
                     <button type="button" class="btn btn-outline-dark" @click="placeBet"
-                        :disabled="newBet.bet > cash">Add bet</button>
+                        :disabled="newBet.bet > cash || newBet.bet > calculatePayoutForBet(newBet)">Bet!</button>
                 </div>
             </div>
 
@@ -124,7 +138,8 @@
                 <div class="w-100 text-center text-secondary" v-if="!(race.bets != 0)">No bets have been made.</div>
                 <div class="w-100 d-flex justify-content-between align-items-center p-2 mb-2 border border-dark rounded text-center text-light" :class="{ 'bg-dark': !bet.won && race.status < 2, 'bg-success': bet.won, 'bg-secondary': !bet.won && race.status == 2 }" v-for="bet in race.bets">
                     <span>{{ bet.type }}</span>
-                    <span><b>{{ horses[bet.horseNumber].name }}</b></span>
+                    <span v-if="!bet.type.includes('Trifecta')"><b>{{ horses[bet.horses[0]].name }}</b></span>
+                    <span v-if="bet.type.includes('Trifecta')" class="trifecta-names">{{ horses[bet.horses[0]].name }}<br>{{ horses[bet.horses[1]].name }}<br>{{ horses[bet.horses[2]].name }}</span>
                     <span>${{ bet.bet }}</span>
                     <span class="badge fs-5" :class="{ 'bg-danger': !bet.won && race.status < 2, 'bg-white': bet.won, 'text-dark': bet.won, strikeout: !bet.won && race.status == 2 }">${{ calculatePayoutForBet(bet) }}</span>
                 </div>
@@ -247,10 +262,10 @@
                     race: {},
                     newBet: {
                         type: "To Win",
-                        horseNumber: 0,
+                        horses: [],
                         bet: 10
                     },
-                    betTypes: ["To Win", "Place"],
+                    betTypes: ["To Win", "Place", "Trifecta", "Box Trifecta"],
 
                     settings: {
                         maxHorsesPool: 20,
@@ -328,8 +343,9 @@
                         this.race.oddsTotal += this.horses[position].speed * 2 + this.horses[position].luck
                     }
                     
-                    
-                    this.newBet.horseNumber = this.race.racingHorses[0]
+                    this.newBet.horses[0] = this.race.racingHorses[0]
+                    this.newBet.horses[1] = this.race.racingHorses[1]
+                    this.newBet.horses[2] = this.race.racingHorses[2]
 
                 },
 
@@ -381,28 +397,60 @@
                 },
 
                 payoutBets() {
+                    let payout = 0
+
                     for (bet of this.race.bets) {
 
+                        
                         bet.won = true
 
-                        if (bet.type == "To Win" && this.horses[bet.horseNumber].placing == 1) {
-                            this.cash += this.calculatePayoutForBet(bet)
-                        } else if (bet.type == "Place" && this.horses[bet.horseNumber].placing <= 3) {
-                            this.cash += this.calculatePayoutForBet(bet)
+                        if (bet.type == "To Win" &&
+                        this.horses[bet.horses[0]].placing == 1) {
+                            payout += this.calculatePayoutForBet(bet)
+
+                        } else if (bet.type == "Place" &&
+                        this.horses[bet.horses[0]].placing <= 3) {
+                            payout += this.calculatePayoutForBet(bet)
+
+                        } else if (bet.type == "Trifecta" &&
+                        this.horses[bet.horses[0]].placing == 1 &&
+                        this.horses[bet.horses[1]].placing == 2 &&
+                        this.horses[bet.horses[2]].placing == 3) {
+                            payout += this.calculatePayoutForBet(bet)
+
+                        } else if (bet.type == "Box Trifecta" &&
+                        this.horses[bet.horses[0]].placing <= 3 &&
+                        this.horses[bet.horses[1]].placing <= 3 &&
+                        this.horses[bet.horses[2]].placing <= 3) {
+                            payout += this.calculatePayoutForBet(bet)
+
                         } else {
                             bet.won = false
                         }
 
                     }
+
+                    this.cash += payout
+                    return payout
                 },
 
                 calculatePayoutForBet(bet) {
                     let payout = 0
 
                     if (bet.type == "To Win") {
-                        payout = this.getHorseOdds(bet.horseNumber) * bet.bet
+                        payout = this.getHorseOdds(bet.horses[0]) * bet.bet
+
                     } else if (bet.type == "Place") {
-                        payout = Math.round((this.getHorseOdds(bet.horseNumber) * bet.bet) / 3)
+                        payout = Math.round((this.getHorseOdds(bet.horses[0]) * bet.bet) / 3)
+
+                    } else if (bet.type == "Trifecta") {
+                        payout = Math.round((this.getHorseOdds(bet.horses[0]) * bet.bet +
+                            this.getHorseOdds(bet.horses[1]) * bet.bet +
+                            this.getHorseOdds(bet.horses[2]) * bet.bet) * 6)
+                    } else if (bet.type == "Box Trifecta") {
+                        payout = Math.round((this.getHorseOdds(bet.horses[0]) * (bet.bet / 3) +
+                            this.getHorseOdds(bet.horses[1]) * (bet.bet / 3) +
+                            this.getHorseOdds(bet.horses[2]) * (bet.bet / 3)) * 6)
                     }
 
                     return payout
