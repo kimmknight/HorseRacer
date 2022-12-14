@@ -65,13 +65,13 @@
         </header>
 
         <div class="container-fluid d-flex justify-content-between align-items-center border border-dark rounded py-1 my-2">
-            <span class="btn">Cash: ${{ cash }}</span>
-            <select class="btn" v-model="settings.raceIntervalMs">
+            <span class="btn">Cash: <b>${{ cash }}</b></span>
+            <select class="btn shadow-none" v-model="settings.raceIntervalMs">
                 <option value="40">Normal</option>
                 <option value="15">Fast</option>
-                <option value="1">Instant</option>
+                <option value="1">Ludicrous</option>
             </select>
-            <span>Race: {{ raceCount }}</span>
+            <span>Race <b></b>#{{ raceCount }}</b></span>
         </div>
 
         <div class="flex-grow-1 container-fluid p-3 border border-dark rounded my-2">
@@ -93,43 +93,57 @@
         </div>
 
         <div class="w-100">
-            <button type="button" class="btn btn-outline-dark w-100" @click="initRace" v-if="race.status == 2">Next
-                race</button>
-            <button type="button" class="btn btn-outline-dark w-100" @click="startRace" v-if="race.status == 0">Start
-                race</button>
+            <button type="button" class="btn btn-outline-dark w-100 fs-5 shadow-none" @click="initRace" v-if="race.status == 2">Next race</button>
+            <button type="button" class="btn btn-outline-dark w-100 fs-5 shadow-none" @click="startRace" v-if="race.status == 0">Start race</button>
         </div>
 
         <div class="d-flex flex-wrap w-100">
             <div class="p-3 border border-dark rounded my-2 w-100" v-if="race.status == 0">
-                <h5>New Bet:</h5>
-                <select class="form-select my-2 border border-dark border-3" v-model="newBet.type">
+                <div class="d-flex flex-wrap align-items-center justify-content-between">
+                    <h5>New Bet:</h5>
+                    
+                </div>
+
+                <select class="form-select my-2 border border-dark border-3 shadow-none" v-model="newBet.type">
                     <option :value="betType" v-for="betType in betTypes">{{ betType }}</option>
                 </select>
 
-                <select class="form-select my-2 border border-dark" v-model="newBet.horses[0]">
-                    <option :value="horseNumber" v-for="horseNumber in race.racingHorses">{{ horses[horseNumber].name }}
-                    </option>
-                </select>
-                <select class="form-select my-2 border border-dark" v-model="newBet.horses[1]" v-if="newBet.type.includes('Trifecta')">
-                    <option :value="horseNumber" v-for="horseNumber in race.racingHorses">{{ horses[horseNumber].name }}
-                    </option>
-                </select>
-                <select class="form-select my-2 border border-dark" v-model="newBet.horses[2]" v-if="newBet.type.includes('Trifecta')">
-                    <option :value="horseNumber" v-for="horseNumber in race.racingHorses">{{ horses[horseNumber].name }}
-                    </option>
-                </select>
+                <div>
+                    <select class="form-select my-2 border border-dark shadow-none" v-model="newBet.horses[0]">
+                        <option :value="horseNumber" v-for="horseNumber in race.racingHorses">
+                            {{ horses[horseNumber].name }}
+                        </option>
+                    </select>
+                    <select class="form-select my-2 border border-dark shadow-none" v-model="newBet.horses[1]" v-if="newBet.type.includes('Trifecta')">
+                        <option :value="horseNumber" v-for="horseNumber in race.racingHorses">
+                            {{ horses[horseNumber].name }}
+                        </option>
+                    </select>
+                    <select class="form-select my-2 border border-dark shadow-none" v-model="newBet.horses[2]" v-if="newBet.type.includes('Trifecta')">
+                        <option :value="horseNumber" v-for="horseNumber in race.racingHorses">
+                            {{ horses[horseNumber].name }}
+                        </option>
+                    </select>
+                </div>
+
+                <div>
+                    <span class="text-danger" v-if="newBet.bet > cash"> Not enough cash for bet.</span>
+                    <span class="text-danger" v-if="newBet.bet > calculatePayoutForBet(newBet)"> Payout less than bet.</span>
+                    <span class="text-danger" v-if="!areBetHorsesUnique"> Duplicate horses selected.</span>
+                </div>
+
                 <div class="my-2 d-flex justify-content-between align-content-center align-items-center">
                     <div class="d-flex align-items-center my-2">
                         <span class="me-1">$</span>
-                        <input type="number" class="form-control me-2 border border-dark" min="1" :max="cash" style="width: 6em;" v-model="newBet.bet" @change="validateNewBetAmount">
+                        <input type="number" class="form-control me-2 border border-dark shadow-none" min="1" :max="cash" style="width: 6em;" v-model="newBet.bet" @change="validateNewBetAmount">
                     </div>
                     <div>
                         Payout: ${{ 
                             calculatePayoutForBet( newBet )
                         }}
                     </div>
-                    <button type="button" class="btn btn-outline-dark" @click="placeBet"
-                        :disabled="newBet.bet > cash || newBet.bet > calculatePayoutForBet(newBet)">Bet!</button>
+                    <button type="button" class="btn btn-outline-dark shadow-none" @click="placeBet"
+                        :disabled="newBet.bet > cash || newBet.bet > calculatePayoutForBet(newBet) || !areBetHorsesUnique">Bet!</button>
                 </div>
             </div>
 
@@ -142,6 +156,47 @@
                     <span v-if="bet.type.includes('Trifecta')" class="trifecta-names">{{ horses[bet.horses[0]].name }}<br>{{ horses[bet.horses[1]].name }}<br>{{ horses[bet.horses[2]].name }}</span>
                     <span>${{ bet.bet }}</span>
                     <span class="badge fs-5" :class="{ 'bg-danger': !bet.won && race.status < 2, 'bg-white': bet.won, 'text-dark': bet.won, strikeout: !bet.won && race.status == 2 }">${{ calculatePayoutForBet(bet) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <footer class="w-100 d-flex justify-content-center small">
+            <a href="#" class="m-2 text-dark" data-bs-toggle="modal" data-bs-target="#modalId">About</a>
+            <a href="https://github.com/kimmknight/HorseRacer" class="m-2 text-dark">GitHub</a>
+        </footer>
+        
+        <div class="modal fade" id="modalId" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="modalTitleId" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitleId">About Horse Racer</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Written by Kim Knight.</p>
+
+                        <p><a href="https://github.com/kimmknight/HorseRacer">https://github.com/kimmknight/HorseRacer</a></p>
+
+                        <p>
+                            Horse Racer is a tribute to Horse Race v1.0 by Thomas Schulze, written for Mac in July 1986.
+                        </p>
+
+                        <p class="text-center"><img src="thomas-schulze.png"></p>
+
+                        <p>Payout information:</p>
+                        <ul>
+                            <li><b>To Win</b> pays (bet * odds) if selected horse wins</li>
+                            <li><b>Place</b> pays (bet * odds)/3 if selected horse places 3rd or better</li>
+                            <li><b>Trifecta</b> pays ((bet * odds) for each horse) * 6 if selected horses place in the order selected</li>
+                            <li><b>Box Trifecta</b> pays ((bet/3 * odds) for each horse) * 6 if selected horses place 3rd or better in any order</li>
+                        </ul>
+
+                        <p>If you have a suggestion for better calculating payouts, please post it as an issue in the GitHub repository.</p>
+
+                        <p>
+                            Horse Racer is written in HTML/CSS/JavaScript using Vue 3 (no build tools) and Bootstrap 5.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -461,6 +516,14 @@
                     else if (this.newBet.bet > this.cash) {this.newBet.bet = this.cash}
                 }
 
+            },
+
+            computed: {
+                areBetHorsesUnique() {
+                    if (!this.newBet.type.includes("Trifecta")) return true
+
+                    return new Set(this.newBet.horses).size == this.newBet.horses.length
+                }
             },
 
             mounted() {
