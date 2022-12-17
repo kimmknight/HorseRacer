@@ -228,8 +228,8 @@
 
             data() {
                 return {
-                    cash: 150,
-                    raceCount: 0,
+                    cash: 150, // cash: the amount of money the player has available to bet with
+                    raceCount: 0, // raceCount: the number of races that have been run in the game
                     horses: [{
                         "name": "Tiny tot"
                     }, {
@@ -332,25 +332,25 @@
                         "name": "Yellow belly"
                     }, {
                         "name": "Nobodies loss"
-                    }],
-                    horsesPool: [],
-                    race: {},
+                    }], // The full list of horses
+                    horsesPool: [], // horsesPool: an array of all horses available to participate in races
+                    race: {}, // race: an object representing the current race, including information about the horses and the results
                     newBet: {
                         type: "To Win",
                         horses: [],
                         bet: 10
-                    },
-                    betTypes: ["To Win", "Place", "Trifecta", "Box Trifecta"],
+                    }, // newBet: an object representing a new bet being placed by the player, including the type of bet, the horses being bet on, and the amount being bet
+                    betTypes: ["To Win", "Place", "Trifecta", "Box Trifecta"], // betTypes: an array of strings representing the different types of bets available in the game
 
                     settings: {
-                        maxHorsesPool: 20,
-                        horsesPerRace: 8,
-                        trackLength: 1600,
-                        raceIntervalMs: 40,
-                        moveConstant: 1,
-                        speedInfluence: 0.035,
-                        luckInfluence: 0.025,
-                        randomInfluence: 5
+                        maxHorsesPool: 20, // maxHorsesPool: the maximum number of horses that can be available in the pool of horses that can participate in races
+                        horsesPerRace: 8, // horsesPerRace: the number of horses that can participate in a single race
+                        trackLength: 1600, // trackLength: the length of the track in meters
+                        raceIntervalMs: 40, // raceIntervalMs: the interval between each race in milliseconds
+                        moveConstant: 1, // moveConstant: a constant that determines how much each horse moves during each interval of a race
+                        speedInfluence: 0.035, // speedInfluence: a decimal value that represents the influence of a horse's speed on its performance in a race (where a higher value means more influence)
+                        luckInfluence: 0.025, // luckInfluence: a decimal value that represents the influence of luck on a horse's performance in a race (where a higher value means more influence)
+                        randomInfluence: 5 // randomInfluence: a constant that determines the amount of randomness in a horse's performance in a race (where a higher value means more randomness)
                     }
                 }
             },
