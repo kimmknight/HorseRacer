@@ -20,9 +20,11 @@
             margin-right: 1em;
             height: 3em;
         }
+
         .strikeout {
             text-decoration: line-through;
         }
+
         .racetrack {
             -webkit-appearance: none;
             height: 34px;
@@ -51,7 +53,6 @@
             font-size: 0.7em;
             line-height: 1em;
         }
-
     </style>
 </head>
 
@@ -64,7 +65,8 @@
             <span class="display-5">Horse Racer</span>
         </header>
 
-        <div class="container-fluid d-flex justify-content-between align-items-center border border-dark rounded py-1 my-2">
+        <div
+            class="container-fluid d-flex justify-content-between align-items-center border border-dark rounded py-1 my-2">
             <span class="btn">Cash: <b>${{ cash }}</b></span>
             <select class="btn shadow-none" v-model="settings.raceIntervalMs">
                 <option value="40">Normal</option>
@@ -83,25 +85,29 @@
                     <span>{{ horses[horseNumber].name }}</span>
                 </div>
                 <div class="position-relative flex-grow-1">
-                    <input class="racetrack w-100" :class="{running: race.status == 1 && !horses[horseNumber].finished}" type="range" min="0" :max="settings.trackLength"
-                        v-model="horses[horseNumber].position" disabled>
+                    <input class="racetrack w-100" :class="{running: race.status == 1 && !horses[horseNumber].finished}"
+                        type="range" min="0" :max="settings.trackLength" v-model="horses[horseNumber].position"
+                        disabled>
 
-                    <span v-if="horses[horseNumber].placing" class="badge text-light m-2 position-absolute start-0" :class="{ 'bg-success': horses[horseNumber].placing < 4, 'bg-secondary': horses[horseNumber].placing >= 4 }">
-                            #{{ horses[horseNumber].placing }}</span>
+                    <span v-if="horses[horseNumber].placing" class="badge text-light m-2 position-absolute start-0"
+                        :class="{ 'bg-success': horses[horseNumber].placing < 4, 'bg-secondary': horses[horseNumber].placing >= 4 }">
+                        #{{ horses[horseNumber].placing }}</span>
                 </div>
             </div>
         </div>
 
         <div class="w-100">
-            <button type="button" class="btn btn-outline-dark w-100 fs-5 shadow-none" @click="initRace" v-if="race.status == 2">Next race</button>
-            <button type="button" class="btn btn-outline-dark w-100 fs-5 shadow-none" @click="startRace" v-if="race.status == 0">Start race</button>
+            <button type="button" class="btn btn-outline-dark w-100 fs-5 shadow-none" @click="initRace"
+                v-if="race.status == 2">Next race</button>
+            <button type="button" class="btn btn-outline-dark w-100 fs-5 shadow-none" @click="startRace"
+                v-if="race.status == 0">Start race</button>
         </div>
 
         <div class="d-flex flex-wrap w-100">
             <div class="p-3 border border-dark rounded my-2 w-100" v-if="race.status == 0">
                 <div class="d-flex flex-wrap align-items-center justify-content-between">
                     <h5>New Bet:</h5>
-                    
+
                 </div>
 
                 <select class="form-select my-2 border border-dark border-3 shadow-none" v-model="newBet.type">
@@ -114,12 +120,14 @@
                             {{ horses[horseNumber].name }}
                         </option>
                     </select>
-                    <select class="form-select my-2 border border-dark shadow-none" v-model="newBet.horses[1]" v-if="newBet.type.includes('Trifecta')">
+                    <select class="form-select my-2 border border-dark shadow-none" v-model="newBet.horses[1]"
+                        v-if="newBet.type.includes('Trifecta')">
                         <option :value="horseNumber" v-for="horseNumber in race.racingHorses">
                             {{ horses[horseNumber].name }}
                         </option>
                     </select>
-                    <select class="form-select my-2 border border-dark shadow-none" v-model="newBet.horses[2]" v-if="newBet.type.includes('Trifecta')">
+                    <select class="form-select my-2 border border-dark shadow-none" v-model="newBet.horses[2]"
+                        v-if="newBet.type.includes('Trifecta')">
                         <option :value="horseNumber" v-for="horseNumber in race.racingHorses">
                             {{ horses[horseNumber].name }}
                         </option>
@@ -128,14 +136,16 @@
 
                 <div>
                     <span class="text-danger" v-if="newBet.bet > cash"> Not enough cash for bet.</span>
-                    <span class="text-danger" v-if="newBet.bet > calculatePayoutForBet(newBet)"> Payout less than bet.</span>
+                    <span class="text-danger" v-if="newBet.bet > calculatePayoutForBet(newBet)"> Payout less than
+                        bet.</span>
                     <span class="text-danger" v-if="!areBetHorsesUnique"> Duplicate horses selected.</span>
                 </div>
 
                 <div class="my-2 d-flex justify-content-between align-content-center align-items-center">
                     <div class="d-flex align-items-center my-2">
                         <span class="me-1">$</span>
-                        <input type="number" class="form-control me-2 border border-dark shadow-none" min="1" :max="cash" style="width: 6em;" v-model="newBet.bet" @change="validateNewBetAmount">
+                        <input type="number" class="form-control me-2 border border-dark shadow-none" min="1"
+                            :max="cash" style="width: 6em;" v-model="newBet.bet" @change="validateNewBetAmount">
                     </div>
                     <div>
                         Payout: ${{ 
@@ -150,12 +160,16 @@
             <div class="w-100 my-2 border border-dark rounded p-3">
                 <h5>Bets:</h5>
                 <div class="w-100 text-center text-secondary" v-if="!(race.bets != 0)">No bets have been made.</div>
-                <div class="w-100 d-flex justify-content-between align-items-center p-2 mb-2 border border-dark rounded text-center text-light" :class="{ 'bg-dark': !bet.won && race.status < 2, 'bg-success': bet.won, 'bg-secondary': !bet.won && race.status == 2 }" v-for="bet in race.bets">
+                <div class="w-100 d-flex justify-content-between align-items-center p-2 mb-2 border border-dark rounded text-center text-light"
+                    :class="{ 'bg-dark': !bet.won && race.status < 2, 'bg-success': bet.won, 'bg-secondary': !bet.won && race.status == 2 }"
+                    v-for="bet in race.bets">
                     <span>{{ bet.type }}</span>
                     <span v-if="!bet.type.includes('Trifecta')"><b>{{ horses[bet.horses[0]].name }}</b></span>
-                    <span v-if="bet.type.includes('Trifecta')" class="trifecta-names">{{ horses[bet.horses[0]].name }}<br>{{ horses[bet.horses[1]].name }}<br>{{ horses[bet.horses[2]].name }}</span>
+                    <span v-if="bet.type.includes('Trifecta')"
+                        class="trifecta-names">{{ horses[bet.horses[0]].name }}<br>{{ horses[bet.horses[1]].name }}<br>{{ horses[bet.horses[2]].name }}</span>
                     <span>${{ bet.bet }}</span>
-                    <span class="badge fs-5" :class="{ 'bg-danger': !bet.won && race.status < 2, 'bg-white': bet.won, 'text-dark': bet.won, strikeout: !bet.won && race.status == 2 }">${{ calculatePayoutForBet(bet) }}</span>
+                    <span class="badge fs-5"
+                        :class="{ 'bg-danger': !bet.won && race.status < 2, 'bg-white': bet.won, 'text-dark': bet.won, strikeout: !bet.won && race.status == 2 }">${{ calculatePayoutForBet(bet) }}</span>
                 </div>
             </div>
         </div>
@@ -164,18 +178,21 @@
             <a href="#" class="m-2 text-dark" data-bs-toggle="modal" data-bs-target="#modalId">About</a>
             <a href="https://github.com/kimmknight/HorseRacer" class="m-2 text-dark">GitHub</a>
         </footer>
-        
-        <div class="modal fade" id="modalId" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog" aria-labelledby="modalTitleId" aria-hidden="true">
+
+        <div class="modal fade" id="modalId" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
+            role="dialog" aria-labelledby="modalTitleId" aria-hidden="true">
             <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="modalTitleId">About Horse Racer</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <p>Written by Kim Knight.</p>
 
-                        <p><a href="https://github.com/kimmknight/HorseRacer">https://github.com/kimmknight/HorseRacer</a></p>
+                        <p><a
+                                href="https://github.com/kimmknight/HorseRacer">https://github.com/kimmknight/HorseRacer</a>
+                        </p>
 
                         <p>
                             Horse Racer is a tribute to Horse Race v1.0 by Thomas Schulze, written for Mac in July 1986.
@@ -187,11 +204,14 @@
                         <ul>
                             <li><b>To Win</b> pays (bet * odds) if selected horse wins</li>
                             <li><b>Place</b> pays (bet * odds)/3 if selected horse places 3rd or better</li>
-                            <li><b>Trifecta</b> pays ((bet * odds) for each horse) * 6 if selected horses place in the order selected</li>
-                            <li><b>Box Trifecta</b> pays ((bet/3 * odds) for each horse) * 6 if selected horses place 3rd or better in any order</li>
+                            <li><b>Trifecta</b> pays ((bet * odds) for each horse) * 6 if selected horses place in the
+                                order selected</li>
+                            <li><b>Box Trifecta</b> pays ((bet/3 * odds) for each horse) * 6 if selected horses place
+                                3rd or better in any order</li>
                         </ul>
 
-                        <p>If you have a suggestion for better calculating payouts, please post it as an issue in the GitHub repository.</p>
+                        <p>If you have a suggestion for better calculating payouts, please post it as an issue in the
+                            GitHub repository.</p>
 
                         <p>
                             Horse Racer is written in HTML/CSS/JavaScript using Vue 3 (no build tools) and Bootstrap 5.
@@ -336,18 +356,22 @@
             },
 
             methods: {
-
+                // Returns a deep copy of the given array
                 deepCopy(arr) {
                     return JSON.parse(JSON.stringify(arr))
                 },
 
+                // Returns an array of random, unique positions in the given array
                 getRandomArrayPositions(arr, size) {
+                    // Get the maximum position in the array
                     const positionMax = arr.length - 1
 
                     let positions = []
+                    // Generate an array of unique random positions in the given array
                     for (let i = 0; i < size; i++) {
                         let newPosition = Math.round(Math.random() * positionMax)
 
+                        // Keep generating new positions until we get a unique one
                         while (positions.includes(newPosition)) {
                             newPosition = Math.round(Math.random() * positionMax)
                         }
@@ -358,9 +382,12 @@
                     return positions
                 },
 
+                // Initializes the pool of horses that can participate in races
                 initHorsesPool() {
+                    // Get a random selection of horses from the full list of horses
                     this.horsesPool = this.getRandomArrayPositions(this.horses, this.settings.maxHorsesPool)
 
+                    // Initialize the attributes of each horse in the pool
                     for (horseNumber of this.horsesPool) {
                         this.horses[horseNumber].speed = Math.floor(Math.random() * 9) + 1 // 1 to 10
                         this.horses[horseNumber].luck = Math.floor(Math.random() * 9) + 1 // 1 to 10
@@ -370,164 +397,213 @@
                     }
                 },
 
+                // Initializes a new race
                 initRace() {
+                    // Increment the race count
                     this.raceCount++
 
+                    // Reset the race object
                     this.race = {}
-
+                    // The race has not started yet
                     this.race.status = 0
+                    // No horses have finished yet
                     this.race.finishedCount = 0
+                    // The array of horses participating in this race
                     this.race.racingHorses = []
-
+                    // The array of bets placed on this race
                     this.race.bets = []
 
+                    // Reset the attributes of each horse
                     for (horse of this.horses) {
                         horse.position = 0
                         horse.placing = 0
                         horse.finished = false
                     }
 
+                    // Select a random group of horses from the pool to participate in this race
                     const randomArray = this.getRandomArrayPositions(this.horsesPool, this.settings.horsesPerRace)
                     for (position of randomArray) {
                         this.race.racingHorses.push(this.horsesPool[position])
                     }
 
+                    // Calculate the total odds of all horses participating in this race
                     this.race.oddsTotal = 0
-
                     for (position of this.race.racingHorses) {
                         this.race.oddsTotal += this.horses[position].speed * 2 + this.horses[position].luck
                     }
-                    
+
+                    // Set the default horses for the new bet form to the first three horses in the race
                     this.newBet.horses[0] = this.race.racingHorses[0]
                     this.newBet.horses[1] = this.race.racingHorses[1]
                     this.newBet.horses[2] = this.race.racingHorses[2]
-
                 },
 
+
+                // Starts the race
                 startRace() {
+                    // Set the race status to "in progress"
                     this.race.status = 1
 
+                    // Start an interval to move the horses and check if the race is finished
                     let raceInterval = setInterval(() => {
+                        // Move the horses
                         this.moveHorses()
 
+                        // If all horses have finished the race, end the race and pay out the bets
                         if (this.race.finishedCount == this.settings.horsesPerRace) {
-                            this.race.status = 2
-                            this.payoutBets()
-                            clearInterval(raceInterval)
+                            this.race.status = 2 // Set the race status to "finished"
+                            this.payoutBets() // Pay out the bets
+                            clearInterval(raceInterval) // Stop the interval
                         }
-                    }, this.settings.raceIntervalMs)
+                    }, this.settings.raceIntervalMs) // Run the interval every `raceIntervalMs` milliseconds
                 },
 
+
+
+
+                // Moves each horse in the race
                 moveHorses() {
+                    // Move each horse in the race
                     for (horseNumber of this.race.racingHorses) {
                         this.moveHorse(horseNumber)
                     }
                 },
 
+
+                // Moves a single horse in the race
                 moveHorse(horseNumber) {
+                    // Only move the horse if it has not finished the race yet
                     if (!this.horses[horseNumber].finished) {
+                        // Calculate the factors that will affect the horse's movement
                         const randomFactor = this.settings.randomInfluence * Math.round(Math.random())
                         const horseSpeedFactor = this.settings.speedInfluence * this.horses[horseNumber].speed
                         const horseLuckFactor = this.settings.luckInfluence * this.horses[horseNumber].luck
+                        // Move the horse
                         this.horses[horseNumber].position += this.settings.moveConstant + randomFactor +
                             horseSpeedFactor + horseLuckFactor
+                        // If the horse has reached the end of the track, mark it as finished and update its placing
                         if (this.horses[horseNumber].position >= this.settings.trackLength) {
                             this.horses[horseNumber].finished = true
                             this.race.finishedCount += 1
                             this.horses[horseNumber].placing = this.race.finishedCount
                         }
                     }
-
                 },
 
+
+                // Calculates the odds for a horse in the current race
                 getHorseOdds(horseNumber) {
+                    // Calculate the odds by dividing the total odds of all other horses by the odds of the specified horse and subtracting 1
                     return Math.floor((this.race.oddsTotal - (this.horses[horseNumber].speed * 2 + this.horses[
                         horseNumber].luck)) / (this.horses[horseNumber].speed * 2 + this.horses[horseNumber]
                         .luck)) - 1
                 },
 
+                // Places a new bet
                 placeBet() {
+                    // Deduct the bet amount from the player's cash
                     this.cash -= this.newBet.bet
+                    // Add the new bet to the list of bets for the current race
                     this.race.bets.push(this.deepCopy(this.newBet))
                 },
+
 
                 payoutBets() {
                     let payout = 0
 
+                    // Iterate over all bets in the current race
                     for (bet of this.race.bets) {
-
-                        
+                        // Assume the bet will win
                         bet.won = true
 
+                        // Check if the bet type and horse placings match the conditions for a win
                         if (bet.type == "To Win" &&
-                        this.horses[bet.horses[0]].placing == 1) {
+                            this.horses[bet.horses[0]].placing == 1) {
                             payout += this.calculatePayoutForBet(bet)
 
                         } else if (bet.type == "Place" &&
-                        this.horses[bet.horses[0]].placing <= 3) {
+                            this.horses[bet.horses[0]].placing <= 3) {
                             payout += this.calculatePayoutForBet(bet)
 
                         } else if (bet.type == "Trifecta" &&
-                        this.horses[bet.horses[0]].placing == 1 &&
-                        this.horses[bet.horses[1]].placing == 2 &&
-                        this.horses[bet.horses[2]].placing == 3) {
+                            this.horses[bet.horses[0]].placing == 1 &&
+                            this.horses[bet.horses[1]].placing == 2 &&
+                            this.horses[bet.horses[2]].placing == 3) {
                             payout += this.calculatePayoutForBet(bet)
 
                         } else if (bet.type == "Box Trifecta" &&
-                        this.horses[bet.horses[0]].placing <= 3 &&
-                        this.horses[bet.horses[1]].placing <= 3 &&
-                        this.horses[bet.horses[2]].placing <= 3) {
+                            this.horses[bet.horses[0]].placing <= 3 &&
+                            this.horses[bet.horses[1]].placing <= 3 &&
+                            this.horses[bet.horses[2]].placing <= 3) {
                             payout += this.calculatePayoutForBet(bet)
 
                         } else {
+                            // If the bet did not meet the conditions for a win, mark it as lost
                             bet.won = false
                         }
-
                     }
 
+                    // Add the total payout for all bets to the player's cash balance
                     this.cash += payout
                     return payout
                 },
 
+                // Calculate the potential payout for a given bet (if it were successful)
                 calculatePayoutForBet(bet) {
+                    
+                    // Start with a payout of $0
                     let payout = 0
 
                     if (bet.type == "To Win") {
+                        // To Win: Horse odds * Bet amount
                         payout = this.getHorseOdds(bet.horses[0]) * bet.bet
 
                     } else if (bet.type == "Place") {
+                        // Place: ( Horse odds * Bet amount ) / 3
                         payout = Math.round((this.getHorseOdds(bet.horses[0]) * bet.bet) / 3)
 
                     } else if (bet.type == "Trifecta") {
+                        // Trifecta: ( ( Horse 1 odds * Bet amount ) + ( Horse 2 odds * Bet amount ) + ( Horse 3 odds * Bet amount ) ) * 6
                         payout = Math.round((this.getHorseOdds(bet.horses[0]) * bet.bet +
                             this.getHorseOdds(bet.horses[1]) * bet.bet +
                             this.getHorseOdds(bet.horses[2]) * bet.bet) * 6)
                     } else if (bet.type == "Box Trifecta") {
+                        // Box Trifecta: ( ( Horse 1 odds * Bet amount/3 ) + ( Horse 2 odds * Bet amount/3 ) + ( Horse 3 odds * Bet amount/3 ) ) * 6
                         payout = Math.round((this.getHorseOdds(bet.horses[0]) * (bet.bet / 3) +
                             this.getHorseOdds(bet.horses[1]) * (bet.bet / 3) +
                             this.getHorseOdds(bet.horses[2]) * (bet.bet / 3)) * 6)
                     }
 
+                    // Return the calculated payout amount
                     return payout
                 },
 
+                // Ensure the amount bet is valid
                 validateNewBetAmount() {
-                    if (this.newBet.bet < 1) {this.newBet.bet = 1}
-                    else if (this.newBet.bet > this.cash) {this.newBet.bet = this.cash}
+                    if (this.newBet.bet < 1) {
+                        // If the betting amount entered is zero or less, change it back to 1.
+                        this.newBet.bet = 1
+                    } else if (this.newBet.bet > this.cash) {
+                        // f the betting amount entered is greater than available cash, change it back to the amount of available cash
+                        this.newBet.bet = this.cash
+                    }
                 }
 
             },
 
             computed: {
+                // Checks whether all horses in a Trifecta bet are unique
                 areBetHorsesUnique() {
                     if (!this.newBet.type.includes("Trifecta")) return true
-
+                    // Convert the Array or horses to a Set (which removes duplicates), then check whether the Array contains the same number of elements as the Set
                     return new Set(this.newBet.horses).size == this.newBet.horses.length
                 }
             },
 
             mounted() {
+                // Initialize the subset of horses that can participate in races
                 this.initHorsesPool()
+                // Initializes a new race
                 this.initRace()
             }
 
