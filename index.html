@@ -82,7 +82,15 @@
                     <span class="badge bg-dark" style="width: 3.2em">{{ getHorseOdds(horseNumber) }}:1</span>
                 </div>
                 <div class="d-flex align-items-center" style="width: 8em">
-                    <span>{{ horses[horseNumber].name }}</span>
+                    <div data-bs-toggle="popover" tabindex="0" data-bs-trigger="focus" :title="horses[horseNumber].name + ' stats'" :data-bs-content="
+                    'Wins: ' + horses[horseNumber].wins + ', ' +
+                    'Places: ' + horses[horseNumber].places + ', ' +
+                    'Races: ' + horses[horseNumber].raceCount + ', ' +
+                    'Speed: ' + horses[horseNumber].speed + ', ' +
+                    'Luck: ' + horses[horseNumber].luck
+                    ">
+                        <span>{{ horses[horseNumber].name }}</span>              
+                    </div >
                 </div>
                 <div class="position-relative flex-grow-1">
                     <input class="racetrack w-100" :class="{running: race.status == 1 && !horses[horseNumber].finished}"
@@ -361,6 +369,7 @@
                     return JSON.parse(JSON.stringify(arr))
                 },
 
+                
                 // Returns an array of random, unique positions in the given array
                 getRandomArrayPositions(arr, size) {
                     // Get the maximum position in the array
@@ -382,6 +391,7 @@
                     return positions
                 },
 
+
                 // Initializes the pool of horses that can participate in races
                 initHorsesPool() {
                     // Get a random selection of horses from the full list of horses
@@ -392,10 +402,13 @@
                         this.horses[horseNumber].speed = Math.floor(Math.random() * 9) + 1 // 1 to 10
                         this.horses[horseNumber].luck = Math.floor(Math.random() * 9) + 1 // 1 to 10
                         this.horses[horseNumber].wins = 0
+                        this.horses[horseNumber].places = 0
+                        this.horses[horseNumber].raceCount = 0
                         this.horses[horseNumber].losses = 0
                         this.horses[horseNumber].position = 0
                     }
                 },
+
 
                 // Initializes a new race
                 initRace() {
@@ -432,6 +445,12 @@
                         this.race.oddsTotal += this.horses[position].speed * 2 + this.horses[position].luck
                     }
 
+                    // Init the Horse Stats popovers
+                    setTimeout(() => {
+                        this.initPopovers()
+                    }, 200)
+                    
+
                     // Set the default horses for the new bet form to the first three horses in the race
                     this.newBet.horses[0] = this.race.racingHorses[0]
                     this.newBet.horses[1] = this.race.racingHorses[1]
@@ -453,12 +472,11 @@
                         if (this.race.finishedCount == this.settings.horsesPerRace) {
                             this.race.status = 2 // Set the race status to "finished"
                             this.payoutBets() // Pay out the bets
+                            this.recordHorsesHistory() // Record the wins
                             clearInterval(raceInterval) // Stop the interval
                         }
                     }, this.settings.raceIntervalMs) // Run the interval every `raceIntervalMs` milliseconds
                 },
-
-
 
 
                 // Moves each horse in the race
@@ -491,6 +509,18 @@
                 },
 
 
+                // Record if the horse won or placed in the current race
+                recordHorsesHistory() {
+                    for (horse of this.race.racingHorses) {
+                        this.horses[horse].raceCount += 1
+                        // If the horse won, increment wins by 1
+                        if (this.horses[horse].placing == 1) {this.horses[horse].wins += 1}
+                        // If the horse placed, increment places by 1
+                        if (this.horses[horse].placing <= 3) {this.horses[horse].places += 1}
+                    }
+                },
+
+
                 // Calculates the odds for a horse in the current race
                 getHorseOdds(horseNumber) {
                     // Calculate the odds by dividing the total odds of all other horses by the odds of the specified horse and subtracting 1
@@ -498,6 +528,7 @@
                         horseNumber].luck)) / (this.horses[horseNumber].speed * 2 + this.horses[horseNumber]
                         .luck)) - 1
                 },
+
 
                 // Places a new bet
                 placeBet() {
@@ -548,6 +579,7 @@
                     return payout
                 },
 
+
                 // Calculate the potential payout for a given bet (if it were successful)
                 calculatePayoutForBet(bet) {
                     
@@ -578,6 +610,7 @@
                     return payout
                 },
 
+
                 // Ensure the amount bet is valid
                 validateNewBetAmount() {
                     if (this.newBet.bet < 1) {
@@ -587,6 +620,15 @@
                         // f the betting amount entered is greater than available cash, change it back to the amount of available cash
                         this.newBet.bet = this.cash
                     }
+                },
+
+
+                // Init Bootstrap 5 Popovers
+                initPopovers() {
+                    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+                    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+                    return new bootstrap.Popover(popoverTriggerEl)
+                    })
                 }
 
             },
