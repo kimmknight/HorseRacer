@@ -117,6 +117,22 @@
         </div>
 
         <div class="d-flex flex-wrap w-100">
+            <div class="w-100 my-2 border border-dark rounded p-3" v-if="race.bets.length > 0">
+                <h5>Bets:</h5>
+                <div class="w-100 text-center text-secondary" v-if="!(race.bets != 0)">No bets have been made.</div>
+                <div class="w-100 d-flex justify-content-between align-items-center p-2 mb-2 border border-dark rounded text-center text-light"
+                    :class="{ 'bg-dark': !bet.won && race.status < 2, 'bg-success': bet.won, 'bg-secondary': !bet.won && race.status == 2 }"
+                    v-for="bet in race.bets">
+                    <span>{{ bet.type }}</span>
+                    <span v-if="!bet.type.includes('Trifecta')"><b>{{ horses[bet.horses[0]].name }}</b></span>
+                    <span v-if="bet.type.includes('Trifecta')"
+                        class="trifecta-names">{{ horses[bet.horses[0]].name }}<br>{{ horses[bet.horses[1]].name }}<br>{{ horses[bet.horses[2]].name }}</span>
+                    <span>${{ bet.bet }}</span>
+                    <span class="badge fs-5"
+                        :class="{ 'bg-danger': !bet.won && race.status < 2, 'bg-white': bet.won, 'text-dark': bet.won, strikeout: !bet.won && race.status == 2 }">${{ calculatePayoutForBet(bet) }}</span>
+                </div>
+            </div>
+
             <div class="p-3 border border-dark rounded my-2 w-100" v-if="race.status == 0">
                 <div class="d-flex flex-wrap align-items-center justify-content-between">
                     <h5>New Bet:</h5>
@@ -167,22 +183,6 @@
                     </div>
                     <button type="button" class="btn btn-outline-dark shadow-none" @click="placeBet"
                         :disabled="newBet.bet > cash || newBet.bet > calculatePayoutForBet(newBet) || !areBetHorsesUnique">Bet!</button>
-                </div>
-            </div>
-
-            <div class="w-100 my-2 border border-dark rounded p-3">
-                <h5>Bets:</h5>
-                <div class="w-100 text-center text-secondary" v-if="!(race.bets != 0)">No bets have been made.</div>
-                <div class="w-100 d-flex justify-content-between align-items-center p-2 mb-2 border border-dark rounded text-center text-light"
-                    :class="{ 'bg-dark': !bet.won && race.status < 2, 'bg-success': bet.won, 'bg-secondary': !bet.won && race.status == 2 }"
-                    v-for="bet in race.bets">
-                    <span>{{ bet.type }}</span>
-                    <span v-if="!bet.type.includes('Trifecta')"><b>{{ horses[bet.horses[0]].name }}</b></span>
-                    <span v-if="bet.type.includes('Trifecta')"
-                        class="trifecta-names">{{ horses[bet.horses[0]].name }}<br>{{ horses[bet.horses[1]].name }}<br>{{ horses[bet.horses[2]].name }}</span>
-                    <span>${{ bet.bet }}</span>
-                    <span class="badge fs-5"
-                        :class="{ 'bg-danger': !bet.won && race.status < 2, 'bg-white': bet.won, 'text-dark': bet.won, strikeout: !bet.won && race.status == 2 }">${{ calculatePayoutForBet(bet) }}</span>
                 </div>
             </div>
         </div>
@@ -347,7 +347,7 @@
                         "name": "Nobodies loss"
                     }], // The full list of horses
                     horsesPool: [], // horsesPool: an array of all horses available to participate in races
-                    race: {}, // race: an object representing the current race, including information about the horses and the results
+                    race: {bets: []}, // race: an object representing the current race, including information about the horses and the results
                     newBet: {
                         type: "To Win",
                         horses: [],
