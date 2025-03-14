@@ -15,6 +15,9 @@
     <!-- Vue 3 -->
     <script src="https://unpkg.com/vue@3"></script>
 
+    <!-- Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
     <style>
         .logo {
             margin-right: 1em;
@@ -581,6 +584,15 @@
 
                     // Add the total payout for all bets to the player's cash balance
                     this.cash += payout
+
+                    // if the player won any money, celebrate with confetti
+                    if (payout > 0) {
+                        confetti({
+                            particleCount: 100,
+                            spread: 90,
+                        });
+                    }
+                    
                     return payout
                 },
 
